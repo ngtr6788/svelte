@@ -1,4 +1,4 @@
-import { b, x } from 'code-red';
+import { b } from 'code-red';
 import Expression from '../../../nodes/shared/Expression.js';
 
 /**
@@ -12,17 +12,22 @@ export function add_const_tags(block, const_tags, ctx) {
 		const name = `#constants_${i}`;
 		const_tags_props.push(b`const ${name} = ${const_tag.expression.manipulate(block, ctx)}`);
 
-		/** @param {string} name */
-		const to_ctx = (name) =>
-			block.renderer.context_lookup.has(name)
-				? x`${ctx}[${block.renderer.context_lookup.get(name).index}]`
-				: /** @type {import('code-red').Node} */ ({ type: 'Identifier', name });
 		const_tag.contexts.forEach((context) => {
 			if (context.type === 'DestructuredVariable') {
 				const_tags_props.push(
 					b`${ctx}[${
 						block.renderer.context_lookup.get(context.key.name).index
-					}] = ${context.default_modifier(context.modifier({ type: 'Identifier', name }), to_ctx)}`
+					}] = ${context.default_modifier({ type: 'Identifier', name })}`
+				);
+			} else if (context.type === 'ComputedProperty') {
+				const expression = new Expression(
+					block.renderer.component,
+					const_tag,
+					const_tag.scope,
+					context.key
+				);
+				const_tags_props.push(
+					b`const ${context.property_name} = ${expression.manipulate(block, ctx)}`
 				);
 			} else {
 				const expression = new Expression(
@@ -32,7 +37,7 @@ export function add_const_tags(block, const_tags, ctx) {
 					context.key
 				);
 				const_tags_props.push(
-					b`const ${context.property_name} = ${expression.manipulate(block, ctx)}`
+					b`const ${context.value_name} = ${expression.manipulate(block, ctx)}`
 				);
 			}
 		});

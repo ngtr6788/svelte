@@ -402,7 +402,7 @@ export default class Expression {
 									type: 'DestructuredVariable',
 									key: func_id,
 									modifier: () => func_expression,
-									default_modifier: /** @param {any} node */ (node) => node
+									default_modifier: () => func_expression
 								});
 								this.replace(block.renderer.reference(func_id));
 							}

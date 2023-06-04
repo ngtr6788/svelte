@@ -365,14 +365,10 @@ export default class EachBlockWrapper extends Wrapper {
 		this.context_props = this.node.contexts.map((prop) => {
 			if (prop.type === 'DestructuredVariable') {
 				/** @param {string} name */
-				const to_ctx = (name) =>
-					renderer.context_lookup.has(name)
-						? x`child_ctx[${renderer.context_lookup.get(name).index}]`
-						: /** @type {import('estree').Node} */ ({ type: 'Identifier', name });
 				return b`child_ctx[${
 					renderer.context_lookup.get(prop.key.name).index
-				}] = ${prop.default_modifier(prop.modifier(x`list[i]`), to_ctx)};`;
-			} else {
+				}] = ${prop.default_modifier(x`list[i]`)};`;
+			} else if (prop.type === 'ComputedProperty') {
 				const expression = new Expression(
 					this.renderer.component,
 					this.node,
@@ -380,6 +376,14 @@ export default class EachBlockWrapper extends Wrapper {
 					prop.key
 				);
 				return b`const ${prop.property_name} = ${expression.manipulate(block, 'child_ctx')};`;
+			} else {
+				const expression = new Expression(
+					this.renderer.component,
+					this.node,
+					this.node.scope,
+					prop.key
+				);
+				return b`const ${prop.value_name} = ${expression.manipulate(block, 'child_ctx')};`;
 			}
 		});
 		if (this.node.has_binding)

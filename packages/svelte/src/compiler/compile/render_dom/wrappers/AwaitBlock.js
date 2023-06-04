@@ -121,12 +121,18 @@ class AwaitBlockBranch extends Wrapper {
 							prop.key
 						);
 						return b`const ${prop.property_name} = ${expression.manipulate(this.block, '#ctx')};`;
-					} else {
-						/** @param {any} name */
-						const to_ctx = (name) => this.renderer.reference(name);
+					} else if (prop.type === 'DestructuredVariable') {
 						return b`#ctx[${
 							this.block.renderer.context_lookup.get(prop.key.name).index
-						}] = ${prop.default_modifier(prop.modifier(x`#ctx[${this.value_index}]`), to_ctx)};`;
+						}] = ${prop.default_modifier(x`#ctx[${this.value_index}]`)};`;
+					} else {
+						const expression = new Expression(
+							this.renderer.component,
+							this.node,
+							this.has_consts(this.node) ? this.node.scope : null,
+							prop.key
+						);
+						return b`const ${prop.value_name} = ${expression.manipulate(this.block, '#ctx')};`;
 					}
 			  })
 			: null;
