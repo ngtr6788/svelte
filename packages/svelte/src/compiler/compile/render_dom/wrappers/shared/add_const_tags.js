@@ -1,5 +1,4 @@
 import { b } from 'code-red';
-import Expression from '../../../nodes/shared/Expression.js';
 
 /**
  * @param {import('../../Block.js').default} block
@@ -19,25 +18,9 @@ export function add_const_tags(block, const_tags, ctx) {
 						block.renderer.context_lookup.get(context.key.name).index
 					}] = ${context.default_modifier({ type: 'Identifier', name })}`
 				);
-			} else if (context.type === 'ComputedProperty') {
-				const expression = new Expression(
-					block.renderer.component,
-					const_tag,
-					const_tag.scope,
-					context.key
-				);
-				const_tags_props.push(
-					b`const ${context.property_name} = ${expression.manipulate(block, ctx)}`
-				);
 			} else {
-				const expression = new Expression(
-					block.renderer.component,
-					const_tag,
-					const_tag.scope,
-					context.key
-				);
 				const_tags_props.push(
-					b`const ${context.value_name} = ${expression.manipulate(block, ctx)}`
+					b`const ${context.name} = ${context.expression.manipulate(block, ctx)}`
 				);
 			}
 		});

@@ -3,7 +3,6 @@ import PendingBlock from './PendingBlock.js';
 import ThenBlock from './ThenBlock.js';
 import CatchBlock from './CatchBlock.js';
 import Expression from './shared/Expression.js';
-import { unpack_destructuring } from './shared/Context.js';
 
 /** @extends Node<'AwaitBlock'> */
 export default class AwaitBlock extends Node {
@@ -16,10 +15,10 @@ export default class AwaitBlock extends Node {
 	/** @type {import('./shared/Context.js').Context[]} */
 	catch_contexts;
 
-	/** @type {import('estree').Node | null} */
+	/** @type {import('estree').Pattern | null} */
 	then_node;
 
-	/** @type {import('estree').Node | null} */
+	/** @type {import('estree').Pattern | null} */
 	catch_node;
 
 	/** @type {import('./PendingBlock.js').default} */
@@ -49,23 +48,9 @@ export default class AwaitBlock extends Node {
 		this.catch_node = info.error;
 		if (this.then_node) {
 			this.then_contexts = [];
-			unpack_destructuring({
-				contexts: this.then_contexts,
-				node: info.value,
-				scope,
-				component,
-				context_rest_properties: this.context_rest_properties
-			});
 		}
 		if (this.catch_node) {
 			this.catch_contexts = [];
-			unpack_destructuring({
-				contexts: this.catch_contexts,
-				node: info.error,
-				scope,
-				component,
-				context_rest_properties: this.context_rest_properties
-			});
 		}
 		this.pending = new PendingBlock(component, this, scope, info.pending);
 		this.then = new ThenBlock(component, this, scope, info.then);

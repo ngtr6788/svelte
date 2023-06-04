@@ -1,27 +1,29 @@
 import { x } from 'code-red';
-import { walk } from 'estree-walker';
-import is_reference from 'is-reference';
-import flatten_reference from '../../utils/flatten_reference.js';
+import Expression from './Expression.js';
 /**
  * @param {{
  * 	contexts: Context[];
+ * 	owner: import('../interfaces.js').INode;
  * 	node: import('estree').Pattern;
- * 	modifier?: DestructuredVariable['modifier'];
- * 	default_modifier?: DestructuredVariable['default_modifier'];
  * 	scope: import('./TemplateScope.js').default;
  * 	component: import('../../Component.js').default;
+ * 	dependencies: Set<string>;
  * 	context_rest_properties: Map<string, import('estree').Node>;
+ * 	modifier?: DestructuredVariable['modifier'];
+ * 	default_modifier?: DestructuredVariable['default_modifier'];
  * 	in_rest_element?: boolean;
  * }} params
  */
 export function unpack_destructuring({
 	contexts,
+	owner,
 	node,
-	modifier = (node) => node,
-	default_modifier = (node) => node,
 	scope,
 	component,
+	dependencies,
 	context_rest_properties,
+	modifier = (node) => node,
+	default_modifier = (node) => node,
 	in_rest_element = false
 }) {
 	if (!node) return;
@@ -35,21 +37,18 @@ export function unpack_destructuring({
 		if (in_rest_element) {
 			context_rest_properties.set(node.name, node);
 		}
+		scope.add(node.name, dependencies, owner);
 	} else if (node.type === 'AssignmentPattern') {
 		// e.g. { property = default } or { property: newName = default }
-		const n = contexts.length;
-		mark_referenced(node.right, scope, component);
-
 		const value_name = component.get_unique_name('default_value');
 		contexts.push({
 			type: 'DefaultValue',
-			value_name,
-			key: node.right
+			name: value_name,
+			expression: new Expression(component, owner, scope, node.right)
 		});
 
 		/** @type {(xnode: import('estree').Node) => import('estree').Node} */
 		const new_default_modifier = (xnode) => {
-			check_initialization(contexts, n, node.right);
 			const member_expr = default_modifier(xnode);
 			return x`${member_expr} !== undefined ? ${member_expr} : ${value_name}`;
 		};
@@ -58,12 +57,14 @@ export function unpack_destructuring({
 
 		unpack_destructuring({
 			contexts,
+			owner,
 			node: new_node,
-			modifier,
-			default_modifier: new_default_modifier,
 			scope,
 			component,
+			dependencies,
 			context_rest_properties,
+			modifier,
+			default_modifier: new_default_modifier,
 			in_rest_element
 		});
 	} else if (node.type === 'ArrayPattern') {
@@ -95,12 +96,14 @@ export function unpack_destructuring({
 
 			unpack_destructuring({
 				contexts,
+				owner,
 				node: new_node,
-				modifier: new_modifier,
-				default_modifier: new_default_modifier,
 				scope,
 				component,
+				dependencies,
 				context_rest_properties,
+				modifier: new_modifier,
+				default_modifier: new_default_modifier,
 				in_rest_element
 			});
 		});
@@ -125,8 +128,8 @@ export function unpack_destructuring({
 					const property_name = component.get_unique_name('computed_property');
 					contexts.push({
 						type: 'ComputedProperty',
-						property_name,
-						key
+						name: property_name,
+						expression: new Expression(component, owner, scope, key)
 					});
 					property_modifier = (node) => x`${node}[${property_name}]`;
 					used_properties.push(x`${property_name}`);
@@ -152,65 +155,18 @@ export function unpack_destructuring({
 
 			unpack_destructuring({
 				contexts,
+				owner,
 				node: new_node,
-				modifier: new_modifier,
-				default_modifier: new_default_modifier,
 				scope,
 				component,
+				dependencies,
 				context_rest_properties,
+				modifier: new_modifier,
+				default_modifier: new_default_modifier,
 				in_rest_element
 			});
 		});
 	}
-}
-
-/**
- * @param {Context[]} contexts
- * @param {number} n
- * @param {import('estree').Expression} expression
- */
-function check_initialization(contexts, n, expression) {
-	/** @param {import('estree').Identifier} node */
-	const find_from_context = (node) => {
-		for (let i = n; i < contexts.length; i++) {
-			const cur_context = contexts[i];
-			if (cur_context.type !== 'DestructuredVariable') continue;
-			const { key } = cur_context;
-			if (node.name === key.name) {
-				throw new Error(`Cannot access '${node.name}' before initialization`);
-			}
-		}
-	};
-	if (expression.type === 'Identifier') {
-		return find_from_context(expression);
-	}
-	walk(expression, {
-		enter(node, parent) {
-			if (is_reference(node, parent)) {
-				find_from_context(/** @type {import('estree').Identifier} */ (node));
-				this.skip();
-			}
-		}
-	});
-	return expression;
-}
-
-/**
- * @param {import('estree').Node} node
- * @param {import('./TemplateScope.js').default} scope
- * @param {import('../../Component.js').default} component
- */
-function mark_referenced(node, scope, component) {
-	walk(node, {
-		enter(node, parent) {
-			if (is_reference(node, parent)) {
-				const { name } = flatten_reference(node);
-				if (!scope.is_let(name) && !scope.names.has(name)) {
-					component.add_reference(node, name);
-				}
-			}
-		}
-	});
 }
 
 /** @typedef {DestructuredVariable | ComputedProperty | DefaultValue} Context */
@@ -218,15 +174,15 @@ function mark_referenced(node, scope, component) {
 /**
 	* @typedef {Object} DefaultValue
 	* @property {'DefaultValue'} type
-	* @property {import('estree').Identifier} value_name
-	* @property {import('estree').Expression} key
+	* @property {import('estree').Identifier} name
+	* @property {import('./Expression.js').default} expression
 	*/
 
 /**
  * @typedef {Object} ComputedProperty
  * @property {'ComputedProperty'} type
- * @property {import('estree').Identifier} property_name
- * @property {import('estree').Expression|import('estree').PrivateIdentifier} key
+ * @property {import('estree').Identifier} name
+ * @property {import('./Expression.js').default} expression
  */
 
 /**

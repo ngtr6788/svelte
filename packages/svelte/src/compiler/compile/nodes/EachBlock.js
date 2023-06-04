@@ -66,17 +66,13 @@ export default class EachBlock extends AbstractBlock {
 		this.contexts = [];
 		unpack_destructuring({
 			contexts: this.contexts,
+			owner: this,
 			node: info.context,
-			scope,
+			scope: this.scope,
 			component,
+			dependencies: this.expression.dependencies,
 			context_rest_properties: this.context_rest_properties
 		});
-		this.contexts.forEach(
-			/** @param {any} context */ (context) => {
-				if (context.type !== 'DestructuredVariable') return;
-				this.scope.add(context.key.name, this.expression.dependencies, this);
-			}
-		);
 		if (this.index) {
 			// index can only change if this is a keyed each block
 			const dependencies = info.key ? this.expression.dependencies : new Set([]);

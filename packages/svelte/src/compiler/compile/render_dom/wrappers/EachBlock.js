@@ -4,7 +4,6 @@ import FragmentWrapper from './Fragment.js';
 import { b, x } from 'code-red';
 import get_object from '../../utils/get_object.js';
 import { add_const_tags, add_const_tags_context } from './shared/add_const_tags.js';
-import Expression from '../../nodes/shared/Expression.js';
 
 /** @extends Wrapper<import('../../nodes/ElseBlock.js').default> */
 export class ElseBlockWrapper extends Wrapper {
@@ -368,22 +367,8 @@ export default class EachBlockWrapper extends Wrapper {
 				return b`child_ctx[${
 					renderer.context_lookup.get(prop.key.name).index
 				}] = ${prop.default_modifier(x`list[i]`)};`;
-			} else if (prop.type === 'ComputedProperty') {
-				const expression = new Expression(
-					this.renderer.component,
-					this.node,
-					this.node.scope,
-					prop.key
-				);
-				return b`const ${prop.property_name} = ${expression.manipulate(block, 'child_ctx')};`;
 			} else {
-				const expression = new Expression(
-					this.renderer.component,
-					this.node,
-					this.node.scope,
-					prop.key
-				);
-				return b`const ${prop.value_name} = ${expression.manipulate(block, 'child_ctx')};`;
+				return b`const ${prop.name} = ${prop.expression.manipulate(block, 'child_ctx')};`;
 			}
 		});
 		if (this.node.has_binding)

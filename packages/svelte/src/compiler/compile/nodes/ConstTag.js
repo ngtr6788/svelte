@@ -84,26 +84,40 @@ export default class ConstTag extends Node {
 	}
 
 	parse_expression() {
+		const this_const_tag = this;
+		this.expression = new Expression(this.component, this, this.scope, this.node.expression.right);
+		const scope_proxy = new Proxy(this.scope, {
+			get(target, prop, reciever) {
+				if ('add' === prop) {
+					/**
+						* @param {string} name
+						* @param {Set<string>} dependencies
+						* @param {any} owner 
+						*/
+					return (name, dependencies, owner) => {
+						const actual_owner = target.get_owner(name);
+						if (actual_owner && actual_owner.type === 'ConstTag' && actual_owner.parent === this_const_tag.parent) {
+							this_const_tag.component.error(
+								this_const_tag.node,
+								compiler_errors.invalid_const_declaration(name)
+							);
+						}
+						target.add(name, dependencies, owner);
+					}
+				}
+
+				return Reflect.get(target, prop, reciever);
+			}
+		});
+
 		unpack_destructuring({
 			contexts: this.contexts,
+			owner: this,
 			node: this.node.expression.left,
-			scope: this.scope,
+			scope: scope_proxy,
 			component: this.component,
+			dependencies: this.expression.dependencies,
 			context_rest_properties: this.context_rest_properties
 		});
-		this.expression = new Expression(this.component, this, this.scope, this.node.expression.right);
-		this.contexts.forEach(
-			/** @param {any} context */ (context) => {
-				if (context.type !== 'DestructuredVariable') return;
-				const owner = this.scope.get_owner(context.key.name);
-				if (owner && owner.type === 'ConstTag' && owner.parent === this.parent) {
-					this.component.error(
-						this.node,
-						compiler_errors.invalid_const_declaration(context.key.name)
-					);
-				}
-				this.scope.add(context.key.name, this.expression.dependencies, this);
-			}
-		);
 	}
 }
