@@ -399,10 +399,9 @@ export default class Expression {
 								/** @type {import('../EachBlock.js').default} */ (
 									template_scope.get_owner(deps[0])
 								).contexts.push({
-									type: 'DestructuredVariable',
+									type: 'FunctionContext',
 									key: func_id,
-									modifier: () => func_expression,
-									default_modifier: () => func_expression
+									function: func_expression
 								});
 								this.replace(block.renderer.reference(func_id));
 							}

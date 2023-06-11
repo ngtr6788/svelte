@@ -1,5 +1,5 @@
 <script>
-	let array = [{a: 1, c: 2}];
+	const array = [{a: 1, c: 2}];
 </script>
 
 {#each array as { a, b = c, c }}

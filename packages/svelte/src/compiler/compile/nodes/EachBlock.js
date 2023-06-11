@@ -10,6 +10,9 @@ export default class EachBlock extends AbstractBlock {
 	/** @type {import('./shared/Expression.js').default} */
 	expression;
 
+	/** @type {import('./shared/Expression.js').default} */
+	declaration;
+
 	/** @type {import('estree').Node} */
 	context_node;
 
@@ -78,6 +81,7 @@ export default class EachBlock extends AbstractBlock {
 			const dependencies = info.key ? this.expression.dependencies : new Set([]);
 			this.scope.add(this.index, dependencies, this);
 		}
+		this.declaration = new Expression(component, this, this.scope, info.context);
 		this.key = info.key ? new Expression(component, this, this.scope, info.key) : null;
 		this.has_animation = false;
 		[this.const_tags, this.children] = get_const_tags(info.children, component, this, this);

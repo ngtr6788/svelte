@@ -97,7 +97,6 @@ export default class EachBlockWrapper extends Wrapper {
 		const { dependencies } = node.expression;
 		block.add_dependencies(dependencies);
 		this.node.contexts.forEach((context) => {
-			if (context.type !== 'DestructuredVariable') return;
 			renderer.add_to_context(context.key.name, true);
 		});
 		add_const_tags_context(renderer, this.node.const_tags);
@@ -361,14 +360,10 @@ export default class EachBlockWrapper extends Wrapper {
 				/** @type {import('estree').Identifier} */ (x`#nodes`)
 			);
 		}
-		this.context_props = this.node.contexts.map((prop) => {
-			if (prop.type === 'DestructuredVariable') {
-				/** @param {string} name */
-				return b`child_ctx[${
-					renderer.context_lookup.get(prop.key.name).index
-				}] = ${prop.default_modifier(x`list[i]`)};`;
-			} else {
-				return b`const ${prop.name} = ${prop.expression.manipulate(block, 'child_ctx')};`;
+		this.context_props = b`(${this.node.declaration.manipulate(block, 'child_ctx')} = list[i]);`;
+		this.node.contexts.forEach((prop) => {
+			if (prop.type === 'FunctionContext') {
+				this.context_props.push(b`${renderer.reference(prop.key.name, 'child_ctx')} = ${prop.function};`);
 			}
 		});
 		if (this.node.has_binding)

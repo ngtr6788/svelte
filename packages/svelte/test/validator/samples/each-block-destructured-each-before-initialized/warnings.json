@@ -1,0 +1,14 @@
+[
+  {
+		"code": "missing-declaration",
+		"message": "'c' is not defined",
+		"start": {
+			"column": 25,
+			"line": 5
+		},
+		"end": {
+			"column": 26,
+			"line": 5
+		}
+	} 
+]

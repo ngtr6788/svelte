@@ -22,6 +22,9 @@ export default class ConstTag extends Node {
 	/** @type {import('./shared/Expression.js').default} */
 	expression;
 
+	/** @type {import('./shared/Expression.js').default} */
+	declaration;
+
 	/** @type {import('./shared/Context.js').Context[]} */
 	contexts = [];
 
@@ -109,7 +112,6 @@ export default class ConstTag extends Node {
 				return Reflect.get(target, prop, reciever);
 			}
 		});
-
 		unpack_destructuring({
 			contexts: this.contexts,
 			owner: this,
@@ -119,5 +121,6 @@ export default class ConstTag extends Node {
 			dependencies: this.expression.dependencies,
 			context_rest_properties: this.context_rest_properties
 		});
+		this.declaration = new Expression(this.component, this, scope_proxy, this.node.expression.left);
 	}
 }

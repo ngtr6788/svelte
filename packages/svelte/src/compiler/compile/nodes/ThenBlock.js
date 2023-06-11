@@ -1,6 +1,7 @@
 import AbstractBlock from './shared/AbstractBlock.js';
 import get_const_tags from './shared/get_const_tags.js';
 import { unpack_destructuring } from './shared/Context.js';
+import Expression from './shared/Expression.js';
 
 /** @extends AbstractBlock<'ThenBlock'> */
 export default class ThenBlock extends AbstractBlock {
@@ -9,6 +10,9 @@ export default class ThenBlock extends AbstractBlock {
 
 	/** @type {import('./ConstTag.js').default[]} */
 	const_tags;
+
+	/** @type {import('./shared/Expression.js').default} */
+	declaration;
 
 	/**
 	 * @param {import('../Component.js').default} component
@@ -29,6 +33,7 @@ export default class ThenBlock extends AbstractBlock {
 				dependencies: parent.expression.dependencies,
 				context_rest_properties: parent.context_rest_properties
 			});
+			this.declaration = new Expression(component, this, this.scope, parent.then_node);
 		}
 		[this.const_tags, this.children] = get_const_tags(info.children, component, this, parent);
 		if (!info.skip) {
