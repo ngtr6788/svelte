@@ -17,7 +17,7 @@ import {
 
 function get_each_context(ctx, list, i) {
 	const child_ctx = ctx.slice();
-	child_ctx[5] = list[i];
+	/*num*/ child_ctx[5] = list[i];
 	return child_ctx;
 }
 

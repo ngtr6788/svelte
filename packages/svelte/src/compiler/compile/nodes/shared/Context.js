@@ -124,7 +124,7 @@ export function unpack_destructuring({
 					// e.g. { "property-in-quotes": ... } or { 14: ... }
 					const property_name = key.value;
 					used_properties.push(x`"${property_name}"`);
-					property_modifier = (node) => x`${node}["${property_name}"]`;
+					property_modifier = (node) => x`${node}[${property_name}]`;
 				}
 
 				new_node = property.value;

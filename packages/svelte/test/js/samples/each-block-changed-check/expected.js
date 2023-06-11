@@ -19,7 +19,7 @@ import {
 
 function get_each_context(ctx, list, i) {
 	const child_ctx = ctx.slice();
-	child_ctx[4] = list[i];
+	/*comment*/ child_ctx[4] = list[i];
 	child_ctx[6] = i;
 	return child_ctx;
 }

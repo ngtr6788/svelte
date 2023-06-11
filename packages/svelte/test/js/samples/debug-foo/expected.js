@@ -22,7 +22,7 @@ const file = undefined;
 
 function get_each_context(ctx, list, i) {
 	const child_ctx = ctx.slice();
-	child_ctx[2] = list[i];
+	/*thing*/ child_ctx[2] = list[i];
 	return child_ctx;
 }
 
