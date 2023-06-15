@@ -115,6 +115,8 @@ export function unpack_destructuring({
 					});
 					property_modifier = (node) => x`${node}[${property_name}]`;
 					used_properties.push(x`${property_name}`);
+					scope.add(property_name.name, property_expression.dependencies, owner);
+					property.key = x`${property_name} = ${key}`;
 				} else if (key.type === 'Identifier') {
 					// e.g. { someProperty: ... }
 					const property_name = key.name;

@@ -388,11 +388,17 @@ function get_event_handler(binding, renderer, block, name, lhs) {
 	/** @type {import('estree').Node[] | undefined} */
 	let set_store;
 	if (context) {
-		const { object, property, store, snippet } = context;
+		const { object, property, store, snippet, modifier } = context;
 		lhs = replace_object(lhs, snippet);
 		contextual_dependencies.add(object.name);
 		contextual_dependencies.add(property.name);
 		contextual_dependencies.delete(name);
+
+		const computed_properties = extract_computed_properties(modifier);
+		computed_properties.forEach((name) => {
+			contextual_dependencies.add(name);
+		});
+
 		if (store) {
 			set_store = b`${store}.set(${`$${store}`});`;
 		}
@@ -457,4 +463,18 @@ function get_value_from_dom(_renderer, element, binding, contextual_dependencies
 	}
 	// everything else
 	return x`this.${name}`;
+}
+
+/**
+ * @param {(node: import('estree').Node)=>import('estree').Node} modifier
+ * @returns {string[]} 
+ */
+function extract_computed_properties(modifier) {
+	const computed_properties = [];
+	let node = modifier(x`x`);
+	while (node.type === 'MemberExpression' && node.computed && node.property.type === 'Identifier') {
+		computed_properties.unshift(node.property.name);
+		node = node.object;
+	}
+	return computed_properties;
 }
