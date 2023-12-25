@@ -9,10 +9,10 @@
 			var a = writable(3);
 			break;
 		case 2:
-			var c = writable(4);
+			var a = writable(4);
 			break;
 		default:
-			var d = writable(5);
+			var a = writable(5);
 			break;
 	}
 
@@ -22,11 +22,11 @@
 			break;
 		}
 		case 2: {
-			var e = writable(4);
+			var b = writable(4);
 			break;
 		}
 		default: {
-			var f = writable(5);
+			var b = writable(5);
 			break;
 		}
 	}

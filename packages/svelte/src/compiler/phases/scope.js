@@ -93,7 +93,7 @@ export class Scope {
 			}
 		}
 
-		if (this.declarations.has(node.name)) {
+		if (this.declarations.has(node.name) && declaration_kind !== 'var') {
 			// This also errors on var/function types, but that's arguably a good thing
 			error(node, 'duplicate-declaration', node.name);
 		}

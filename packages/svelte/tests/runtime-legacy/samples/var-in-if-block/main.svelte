@@ -5,16 +5,11 @@
 		var b = 123;
 		var c = 0;
 	} else {
-		var d = 0;
-		var e = 456;
+		var b = 0;
+		var c = 456;
 	}
 </script>
 
 <p>{condition}</p>
-{#if condition}
-	<p>{b}</p>
-	<p>{c}</p>
-{:else}
-	<p>{d}</p>
-	<p>{e}</p>
-{/if}
+<p>{b}</p>
+<p>{c}</p>
